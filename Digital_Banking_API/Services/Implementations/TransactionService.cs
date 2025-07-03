@@ -18,34 +18,52 @@ namespace Digital_Banking_API.Services.Implementations
             _context = context;
             _logger = logger;
         }
-
         public async Task<Transaction> DepositAsync(TransactionDto dto)
         {
             var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == dto.AccountNumber);
-            if (account == null || !account.IsActive) throw new Exception("Invalid account.");
-            if (dto.Amount <= 0) throw new Exception("Invalid amount.");
+            if (account == null || !account.IsActive)
+                throw new Exception("Invalid account.");
 
-            var todayTotal = await GetTotalTransactionsTodayAsync(account.Id); // or from.Id
-            if (todayTotal + dto.Amount > account.DailyLimit)
-                throw new Exception("Daily transaction limit exceeded.");
+            if (dto.Amount <= 0)
+                throw new Exception("Invalid amount.");
+
+            var today = DateTime.UtcNow.Date;
+            var totalToday = await _context.Transactions
+                .Where(t => t.FromAccountId == account.Id && t.Timestamp.Date == today)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+ 
+            var fee = Math.Round(dto.Amount * 0.01m, 2);
+            var finalAmount = dto.Amount - fee;
+            if (finalAmount <= 0)
+                throw new Exception("Amount too low after fee deduction.");
 
 
-            account.Balance += dto.Amount;
+            if (totalToday + dto.Amount > account.DailyLimit)
+            {
+                throw new Exception($"Daily transaction limit exceeded. You can still transact ₱{account.DailyLimit - totalToday} today.");
+            }
+
+            account.Balance += finalAmount;
 
             var transaction = new Transaction
             {
                 FromAccountId = account.Id,
                 Amount = dto.Amount,
                 TransactionType = "Deposit",
-                Description = dto.Description,
+                Description = string.IsNullOrWhiteSpace(dto.Description)
+                    ? $"Deposit (Fee: {fee})"
+                    : dto.Description,
                 Status = "Success",
                 Timestamp = DateTime.UtcNow
             };
 
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
+
             return transaction;
         }
+
 
         public async Task<Transaction> WithdrawAsync(TransactionDto dto)
         {
@@ -61,27 +79,17 @@ namespace Digital_Banking_API.Services.Implementations
             if (account.Balance < totalAmount)
                 throw new Exception("Insufficient balance including fee.");
 
-            //  if (account.Balance < dto.Amount) throw new Exception("Insufficient balance.");
 
-            var todayTotal = await GetTotalTransactionsTodayAsync(account.Id); // or from.Id
+            var todayTotal = await GetTotalTransactionsTodayAsync(account.Id);
             if (todayTotal + dto.Amount > account.DailyLimit)
                 throw new Exception("Daily transaction limit exceeded.");
 
 
-            //account.Balance -= dto.Amount;
+            if (todayTotal + dto.Amount > account.DailyLimit)
+            {
+                throw new Exception($"Daily transaction limit exceeded. You can still transact ₱{account.DailyLimit - todayTotal} today.");
+            }
 
-            //var transaction = new Transaction
-            //{
-            //    FromAccountId = account.Id,
-            //    Amount = dto.Amount,
-            //    TransactionType = "Withdrawal",
-            //    Description = dto.Description,
-            //    Status = "Success",
-            //    Timestamp = DateTime.UtcNow
-            //};
-         
-
-           
 
             account.Balance -= totalAmount;
 
@@ -93,6 +101,7 @@ namespace Digital_Banking_API.Services.Implementations
                 TransactionType = "Withdrawal",
                 Description = dto.Description,
                 Status = "Success",
+                PostBalance = account.Balance,
                 Timestamp = DateTime.UtcNow
             };
 
@@ -109,10 +118,6 @@ namespace Digital_Banking_API.Services.Implementations
             var fee = Math.Round(dto.Amount * 0.02m, 2);
             var totalAmount = dto.Amount + fee;
 
-        
-
-
-
             if (from == null || to == null) throw new Exception("Invalid account.");
             if (!from.IsActive || !to.IsActive) throw new Exception("One or both accounts are inactive.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
@@ -120,19 +125,11 @@ namespace Digital_Banking_API.Services.Implementations
             if (from.Balance < totalAmount)
                 throw new Exception("Insufficient balance including fee.");
 
-            //if (from.Balance < dto.Amount) throw new Exception("Insufficient balance.");
-
-            var todayTotal = await GetTotalTransactionsTodayAsync(from.Id); // Corrected from 'account.Id' to 'from.Id'
+            var todayTotal = await GetTotalTransactionsTodayAsync(from.Id);
             if (todayTotal + dto.Amount > from.DailyLimit)
                 throw new Exception("Daily transaction limit exceeded.");
 
             using var tx = await _context.Database.BeginTransactionAsync();
-
-            //from.Balance -= dto.Amount;
-            //to.Balance += dto.Amount;
-
-
-
 
             from.Balance -= totalAmount;
             to.Balance += dto.Amount;
@@ -146,19 +143,10 @@ namespace Digital_Banking_API.Services.Implementations
                 TransactionType = "Transfer",
                 Description = dto.Description,
                 Status = "Success",
+                PostBalance = from.Balance,
                 Timestamp = DateTime.UtcNow
             };
 
-            //var transaction = new Transaction
-            //{
-            //    FromAccountId = from.Id,
-            //    ToAccountId = to.Id,
-            //    Amount = dto.Amount,
-            //    TransactionType = "Transfer",
-            //    Description = dto.Description,
-            //    Status = "Success",
-            //    Timestamp = DateTime.UtcNow
-            //};
 
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();
@@ -173,17 +161,6 @@ namespace Digital_Banking_API.Services.Implementations
                 .Include(t => t.FromAccount)
                 .Include(t => t.ToAccount)
                 .FirstOrDefaultAsync(t => t.Id == id);
-        }
-
-        public async Task<List<Transaction>> GetTransactionHistoryAsync(string accountNumber)
-        {
-            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
-            if (account == null) throw new Exception("Account not found.");
-
-            return await _context.Transactions
-                .Where(t => t.FromAccountId == account.Id || t.ToAccountId == account.Id)
-                .OrderByDescending(t => t.Timestamp)
-                .ToListAsync();
         }
 
         public async Task<List<Transaction>> GetStatementAsync(string accountNumber, DateTime from, DateTime to)
@@ -204,6 +181,50 @@ namespace Digital_Banking_API.Services.Implementations
             return await _context.Transactions
                 .Where(t => t.FromAccountId == accountId && t.Timestamp.Date == today && t.Status == "Success")
                 .SumAsync(t => t.Amount);
+        }
+        public async Task<List<Transaction>> GetTransactionHistoryAsync(string accountNumber)
+        {
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+
+            if (account == null)
+                throw new Exception("Account not found.");
+
+            var transactions = await _context.Transactions
+                .Where(t => t.FromAccountId == account.Id || t.ToAccountId == account.Id)
+                .OrderByDescending(t => t.Timestamp)
+                .Select(t => new Transaction
+                {
+                    Id = t.Id,
+                    FromAccountId = t.FromAccountId,
+                    ToAccountId = t.ToAccountId,
+                    Amount = t.Amount,
+                    TransactionType = t.TransactionType,
+                    Description = t.Description,
+                    Timestamp = t.Timestamp,
+                    Status = t.Status,
+                    PostBalance = t.PostBalance
+                })
+                .ToListAsync();
+
+            return transactions;
+        }
+
+        public async Task<List<Transaction>> SearchTransactionsAsync(string accountNumber, decimal? amount, string description)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+            if (account == null) throw new Exception("Account not found.");
+
+            var query = _context.Transactions
+                .Where(t => t.FromAccountId == account.Id || t.ToAccountId == account.Id);
+
+            if (amount.HasValue)
+                query = query.Where(t => t.Amount == amount.Value);
+
+            if (!string.IsNullOrWhiteSpace(description))
+                query = query.Where(t => t.Description.Contains(description));
+
+            return await query.OrderByDescending(t => t.Timestamp).ToListAsync();
         }
     }
 }

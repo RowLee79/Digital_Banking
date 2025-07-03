@@ -10,6 +10,7 @@
         public string Description { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = "Completed";
+        public decimal PostBalance { get; set; }
         public Account FromAccount { get; set; } = null!;
         public Account? ToAccount { get; set; }
         public decimal Fee { get; set; } // Add this

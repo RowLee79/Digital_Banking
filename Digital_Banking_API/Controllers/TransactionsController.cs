@@ -20,20 +20,44 @@ namespace Digital_Banking_API.Controllers
             _transactionService = transactionService;
         }
 
+        //[HttpPost("deposit")]
+        //public async Task<IActionResult> Deposit([FromBody] DepositDto dto)
+        //{
+        //    // Fix: Map DepositDto to TransactionDto before calling the service
+        //    var transactionDto = new TransactionDto
+        //    {
+        //        AccountNumber = dto.AccountNumber,
+        //        Amount = dto.Amount,
+        //        Description = dto.Description
+        //    };
+
+        //    var result = await _transactionService.DepositAsync(transactionDto);
+        //    return Ok(result);
+        //}
         [HttpPost("deposit")]
         public async Task<IActionResult> Deposit([FromBody] DepositDto dto)
         {
-            // Fix: Map DepositDto to TransactionDto before calling the service
-            var transactionDto = new TransactionDto
+            try
             {
-                AccountNumber = dto.AccountNumber,
-                Amount = dto.Amount,
-                Description = dto.Description
-            };
 
-            var result = await _transactionService.DepositAsync(transactionDto);
-            return Ok(result);
+                var transactionDto = new TransactionDto
+                {
+                    AccountNumber = dto.AccountNumber,
+                    Amount = dto.Amount,
+                    Description = dto.Description
+                };
+
+                var transaction = await _transactionService.DepositAsync(transactionDto);
+                return Ok(transaction);
+            }
+            catch (Exception ex)
+            {
+                // Log exception, if logger available
+                return BadRequest(new { error = ex.Message });
+            }
         }
+
+
 
         [HttpPost("withdraw")]
         public async Task<IActionResult> Withdraw([FromBody] WithdrawDto dto)
@@ -147,6 +171,35 @@ namespace Digital_Banking_API.Controllers
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("accounts/{accountNumber}/balance-history")]
+        public async Task<IActionResult> GetBalanceHistory(string accountNumber)
+        {
+            var transactions = await _transactionService.GetTransactionHistoryAsync(accountNumber); // Fix method name
+            var balanceHistory = transactions.Select(t => new
+            {
+                t.Timestamp,
+                t.TransactionType,
+                t.Amount,
+                t.Description,
+                t.PostBalance
+            });
+            return Ok(balanceHistory);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchTransactions(string accountNumber, decimal? amount, string? description)
+        {
+            try
+            {
+                var results = await _transactionService.SearchTransactionsAsync(accountNumber, amount, description);
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 
