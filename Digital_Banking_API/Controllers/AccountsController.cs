@@ -13,10 +13,12 @@ namespace Digital_Banking_API.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;
+        private readonly BankingContext _context;
 
-        public AccountsController(IAccountService accountService)
+        public AccountsController(IAccountService accountService, BankingContext context)
         {
             _accountService = accountService;
+            _context = context;
         }
 
         [HttpGet("{accountNumber}")]
@@ -49,5 +51,26 @@ namespace Digital_Banking_API.Controllers
             if (!updated) return NotFound();
             return NoContent();
         }
+
+        [HttpGet("{accountNumber}/limit")]
+        public async Task<IActionResult> GetLimit(string accountNumber)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+            if (account == null) return NotFound("Account not found.");
+            return Ok(account.DailyLimit);
+        }
+
+        [HttpPut("{accountNumber}/limit")]
+        public async Task<IActionResult> SetLimit(string accountNumber, [FromBody] decimal newLimit)
+        {
+            if (newLimit <= 0) return BadRequest("Limit must be greater than zero.");
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+            if (account == null) return NotFound("Account not found.");
+
+            account.DailyLimit = newLimit;
+            await _context.SaveChangesAsync();
+            return Ok(account.DailyLimit);
+        }
+
     }
 }

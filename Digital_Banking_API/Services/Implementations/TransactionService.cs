@@ -4,6 +4,7 @@ using Digital_Banking_API.Models.Dto;
 using Digital_Banking_API.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Principal;
 
 namespace Digital_Banking_API.Services.Implementations
 {
@@ -23,6 +24,11 @@ namespace Digital_Banking_API.Services.Implementations
             var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == dto.AccountNumber);
             if (account == null || !account.IsActive) throw new Exception("Invalid account.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
+
+            var todayTotal = await GetTotalTransactionsTodayAsync(account.Id); // or from.Id
+            if (todayTotal + dto.Amount > account.DailyLimit)
+                throw new Exception("Daily transaction limit exceeded.");
+
 
             account.Balance += dto.Amount;
 
@@ -47,6 +53,11 @@ namespace Digital_Banking_API.Services.Implementations
             if (account == null || !account.IsActive) throw new Exception("Invalid account.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
             if (account.Balance < dto.Amount) throw new Exception("Insufficient balance.");
+
+            var todayTotal = await GetTotalTransactionsTodayAsync(account.Id); // or from.Id
+            if (todayTotal + dto.Amount > account.DailyLimit)
+                throw new Exception("Daily transaction limit exceeded.");
+
 
             account.Balance -= dto.Amount;
 
@@ -74,6 +85,10 @@ namespace Digital_Banking_API.Services.Implementations
             if (!from.IsActive || !to.IsActive) throw new Exception("One or both accounts are inactive.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
             if (from.Balance < dto.Amount) throw new Exception("Insufficient balance.");
+
+            var todayTotal = await GetTotalTransactionsTodayAsync(from.Id); // Corrected from 'account.Id' to 'from.Id'
+            if (todayTotal + dto.Amount > from.DailyLimit)
+                throw new Exception("Daily transaction limit exceeded.");
 
             using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -129,8 +144,12 @@ namespace Digital_Banking_API.Services.Implementations
                 .OrderByDescending(t => t.Timestamp)
                 .ToListAsync();
         }
-
-
+        private async Task<decimal> GetTotalTransactionsTodayAsync(int accountId)
+        {
+            var today = DateTime.UtcNow.Date;
+            return await _context.Transactions
+                .Where(t => t.FromAccountId == accountId && t.Timestamp.Date == today && t.Status == "Success")
+                .SumAsync(t => t.Amount);
+        }
     }
-
 }

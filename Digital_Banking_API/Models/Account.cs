@@ -10,6 +10,8 @@
         public decimal Balance { get; set; } = 0.00m;
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public decimal DailyLimit { get; set; } = 10000m; // Default daily limit
+
         public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

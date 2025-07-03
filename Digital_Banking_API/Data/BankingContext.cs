@@ -43,6 +43,8 @@ namespace Digital_Banking_API.Data
                 .Property(a => a.Balance)
                 .HasColumnType("decimal(18,2)");
 
+            modelBuilder.Entity<Account>().Property(a => a.DailyLimit).HasColumnType("decimal(18,2)");
+
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Amount)
                 .HasColumnType("decimal(18,2)");
@@ -61,9 +63,9 @@ namespace Digital_Banking_API.Data
             );
 
             modelBuilder.Entity<Account>().HasData(
-                new Account { Id = 1, CustomerId = 1, AccountNumber = "10000001", AccountType = "Checking", Balance = 1000.00m, IsActive = true, CreatedDate = DateTime.UtcNow },
-                new Account { Id = 2, CustomerId = 2, AccountNumber = "10000002", AccountType = "Savings", Balance = 2500.00m, IsActive = true, CreatedDate = DateTime.UtcNow },
-                new Account { Id = 3, CustomerId = 3, AccountNumber = "10000003", AccountType = "Checking", Balance = 500.00m, IsActive = false, CreatedDate = DateTime.UtcNow }
+                new Account { Id = 1, CustomerId = 1, AccountNumber = "10000001", AccountType = "Checking", Balance = 1000.00m, IsActive = true, CreatedDate = DateTime.UtcNow, DailyLimit = 10000m },
+                new Account { Id = 2, CustomerId = 2, AccountNumber = "10000002", AccountType = "Savings", Balance = 2500.00m, IsActive = true, CreatedDate = DateTime.UtcNow, DailyLimit = 10000m },
+                new Account { Id = 3, CustomerId = 3, AccountNumber = "10000003", AccountType = "Checking", Balance = 500.00m, IsActive = false, CreatedDate = DateTime.UtcNow, DailyLimit = 10000m }
             );
 
             modelBuilder.Entity<Transaction>().HasData(

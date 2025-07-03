@@ -4,6 +4,7 @@ using Digital_Banking_API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Digital_Banking_API.Migrations
 {
     [DbContext(typeof(BankingContext))]
-    partial class BankingContextModelSnapshot : ModelSnapshot
+    [Migration("20250703103116_addDailyLimit")]
+    partial class addDailyLimit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,7 +71,7 @@ namespace Digital_Banking_API.Migrations
                             AccountNumber = "10000001",
                             AccountType = "Checking",
                             Balance = 1000.00m,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5679),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1497),
                             CustomerId = 1,
                             DailyLimit = 10000m,
                             IsActive = true
@@ -80,7 +82,7 @@ namespace Digital_Banking_API.Migrations
                             AccountNumber = "10000002",
                             AccountType = "Savings",
                             Balance = 2500.00m,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5681),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1498),
                             CustomerId = 2,
                             DailyLimit = 10000m,
                             IsActive = true
@@ -91,7 +93,7 @@ namespace Digital_Banking_API.Migrations
                             AccountNumber = "10000003",
                             AccountType = "Checking",
                             Balance = 500.00m,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5682),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1500),
                             CustomerId = 3,
                             DailyLimit = 10000m,
                             IsActive = false
@@ -133,7 +135,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5560),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1187),
                             Email = "user1@mail.com",
                             FirstName = "First1",
                             LastName = "Last1",
@@ -142,7 +144,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5600),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1410),
                             Email = "user2@mail.com",
                             FirstName = "First2",
                             LastName = "Last2",
@@ -151,7 +153,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 3,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5605),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1417),
                             Email = "user3@mail.com",
                             FirstName = "First3",
                             LastName = "Last3",
@@ -160,7 +162,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 4,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5609),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1421),
                             Email = "user4@mail.com",
                             FirstName = "First4",
                             LastName = "Last4",
@@ -169,7 +171,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 5,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5613),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1425),
                             Email = "user5@mail.com",
                             FirstName = "First5",
                             LastName = "Last5",
@@ -178,7 +180,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 6,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5619),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1431),
                             Email = "user6@mail.com",
                             FirstName = "First6",
                             LastName = "Last6",
@@ -187,7 +189,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 7,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5623),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1435),
                             Email = "user7@mail.com",
                             FirstName = "First7",
                             LastName = "Last7",
@@ -196,7 +198,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 8,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5627),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1439),
                             Email = "user8@mail.com",
                             FirstName = "First8",
                             LastName = "Last8",
@@ -205,7 +207,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 9,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5631),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1443),
                             Email = "user9@mail.com",
                             FirstName = "First9",
                             LastName = "Last9",
@@ -214,7 +216,7 @@ namespace Digital_Banking_API.Migrations
                         new
                         {
                             Id = 10,
-                            CreatedDate = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5636),
+                            CreatedDate = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1448),
                             Email = "user10@mail.com",
                             FirstName = "First10",
                             LastName = "Last10",
@@ -270,7 +272,7 @@ namespace Digital_Banking_API.Migrations
                             Description = "Initial deposit",
                             FromAccountId = 1,
                             Status = "Completed",
-                            Timestamp = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5747),
+                            Timestamp = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1568),
                             TransactionType = "Deposit"
                         },
                         new
@@ -280,7 +282,7 @@ namespace Digital_Banking_API.Migrations
                             Description = "Test transfer",
                             FromAccountId = 2,
                             Status = "Completed",
-                            Timestamp = new DateTime(2025, 7, 3, 10, 33, 51, 175, DateTimeKind.Utc).AddTicks(5749),
+                            Timestamp = new DateTime(2025, 7, 3, 10, 31, 16, 163, DateTimeKind.Utc).AddTicks(1570),
                             ToAccountId = 3,
                             TransactionType = "Transfer"
                         });
