@@ -50,21 +50,46 @@ namespace Digital_Banking_API.Services.Implementations
         public async Task<Transaction> WithdrawAsync(TransactionDto dto)
         {
             var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == dto.AccountNumber);
+
+            var fee = Math.Round(dto.Amount * 0.01m, 2);
+            var totalAmount = dto.Amount + fee;
+
+
             if (account == null || !account.IsActive) throw new Exception("Invalid account.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
-            if (account.Balance < dto.Amount) throw new Exception("Insufficient balance.");
+
+            if (account.Balance < totalAmount)
+                throw new Exception("Insufficient balance including fee.");
+
+            //  if (account.Balance < dto.Amount) throw new Exception("Insufficient balance.");
 
             var todayTotal = await GetTotalTransactionsTodayAsync(account.Id); // or from.Id
             if (todayTotal + dto.Amount > account.DailyLimit)
                 throw new Exception("Daily transaction limit exceeded.");
 
 
-            account.Balance -= dto.Amount;
+            //account.Balance -= dto.Amount;
+
+            //var transaction = new Transaction
+            //{
+            //    FromAccountId = account.Id,
+            //    Amount = dto.Amount,
+            //    TransactionType = "Withdrawal",
+            //    Description = dto.Description,
+            //    Status = "Success",
+            //    Timestamp = DateTime.UtcNow
+            //};
+         
+
+           
+
+            account.Balance -= totalAmount;
 
             var transaction = new Transaction
             {
                 FromAccountId = account.Id,
                 Amount = dto.Amount,
+                Fee = fee,
                 TransactionType = "Withdrawal",
                 Description = dto.Description,
                 Status = "Success",
@@ -81,10 +106,21 @@ namespace Digital_Banking_API.Services.Implementations
             var from = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == dto.FromAccount);
             var to = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == dto.ToAccount);
 
+            var fee = Math.Round(dto.Amount * 0.02m, 2);
+            var totalAmount = dto.Amount + fee;
+
+        
+
+
+
             if (from == null || to == null) throw new Exception("Invalid account.");
             if (!from.IsActive || !to.IsActive) throw new Exception("One or both accounts are inactive.");
             if (dto.Amount <= 0) throw new Exception("Invalid amount.");
-            if (from.Balance < dto.Amount) throw new Exception("Insufficient balance.");
+
+            if (from.Balance < totalAmount)
+                throw new Exception("Insufficient balance including fee.");
+
+            //if (from.Balance < dto.Amount) throw new Exception("Insufficient balance.");
 
             var todayTotal = await GetTotalTransactionsTodayAsync(from.Id); // Corrected from 'account.Id' to 'from.Id'
             if (todayTotal + dto.Amount > from.DailyLimit)
@@ -92,7 +128,13 @@ namespace Digital_Banking_API.Services.Implementations
 
             using var tx = await _context.Database.BeginTransactionAsync();
 
-            from.Balance -= dto.Amount;
+            //from.Balance -= dto.Amount;
+            //to.Balance += dto.Amount;
+
+
+
+
+            from.Balance -= totalAmount;
             to.Balance += dto.Amount;
 
             var transaction = new Transaction
@@ -100,11 +142,23 @@ namespace Digital_Banking_API.Services.Implementations
                 FromAccountId = from.Id,
                 ToAccountId = to.Id,
                 Amount = dto.Amount,
+                Fee = fee,
                 TransactionType = "Transfer",
                 Description = dto.Description,
                 Status = "Success",
                 Timestamp = DateTime.UtcNow
             };
+
+            //var transaction = new Transaction
+            //{
+            //    FromAccountId = from.Id,
+            //    ToAccountId = to.Id,
+            //    Amount = dto.Amount,
+            //    TransactionType = "Transfer",
+            //    Description = dto.Description,
+            //    Status = "Success",
+            //    Timestamp = DateTime.UtcNow
+            //};
 
             _context.Transactions.Add(transaction);
             await _context.SaveChangesAsync();

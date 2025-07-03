@@ -9,5 +9,7 @@
         public DateTime Timestamp { get; set; }
         public string Status { get; set; }
         public string AccountNumber { get; set; } // Added property to fix CS0117  
+        public decimal Fee { get; set; } // Add this
+
     }
 }

@@ -12,5 +12,7 @@
         public string Status { get; set; } = "Completed";
         public Account FromAccount { get; set; } = null!;
         public Account? ToAccount { get; set; }
+        public decimal Fee { get; set; } // Add this
+
     }
 }

@@ -49,6 +49,9 @@ namespace Digital_Banking_API.Data
                 .Property(t => t.Amount)
                 .HasColumnType("decimal(18,2)");
 
+            modelBuilder.Entity<Transaction>().Property(t => t.Fee).HasColumnType("decimal(18,2)");
+
+
             // SQL Seed via HasData
             modelBuilder.Entity<Customer>().HasData(
                 Enumerable.Range(1, 10).Select(i => new Customer
