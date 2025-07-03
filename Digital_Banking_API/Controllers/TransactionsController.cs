@@ -1,5 +1,6 @@
 ﻿using Digital_Banking_API.Models.Dto;
 using Digital_Banking_API.Services;
+using Digital_Banking_API.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PdfSharpCore.Drawing;
@@ -187,6 +188,42 @@ namespace Digital_Banking_API.Controllers
                 t.PostBalance
             });
             return Ok(balanceHistory);
+        }
+
+        [HttpGet("balance-history/export/{accountNumber}")]
+        public async Task<IActionResult> ExportBalanceHistory(string accountNumber, [FromQuery] string format = "csv")
+        {
+            try
+            {
+                var history = await _transactionService.GetBalanceHistoryAsync(accountNumber);
+
+                if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine("Timestamp,TransactionType,Amount,Description,RunningBalance");
+
+                    foreach (var item in history)
+                    {
+                        csv.AppendLine($"{item.Timestamp:yyyy-MM-dd HH:mm:ss},{item.TransactionType},{item.Amount},{item.Description},{item.RunningBalance}");
+                    }
+
+                    var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+                    return File(bytes, "text/csv", $"BalanceHistory_{accountNumber}.csv");
+                }
+                else if (format.Equals("pdf", StringComparison.OrdinalIgnoreCase))
+                {
+                    var pdfBytes = BalanceHistoryPdfGenerator.Generate(history, accountNumber);
+                    return File(pdfBytes, "application/pdf", $"BalanceHistory_{accountNumber}.pdf");
+                }
+                else
+                {
+                    return BadRequest(new { message = "Unsupported format. Use 'csv' or 'pdf'." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("search")]

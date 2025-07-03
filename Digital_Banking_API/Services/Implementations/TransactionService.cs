@@ -226,5 +226,46 @@ namespace Digital_Banking_API.Services.Implementations
 
             return await query.OrderByDescending(t => t.Timestamp).ToListAsync();
         }
+        public async Task<List<BalanceHistoryDto>> GetBalanceHistoryAsync(string accountNumber)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+            if (account == null) throw new Exception("Account not found.");
+
+            var transactions = await _context.Transactions
+                .Where(t => t.FromAccountId == account.Id || t.ToAccountId == account.Id)
+                .OrderBy(t => t.Timestamp)
+                .ToListAsync();
+
+            decimal balance = 0;
+            var history = new List<BalanceHistoryDto>();
+
+            foreach (var t in transactions)
+            {
+                var isOutgoing = t.FromAccountId == account.Id;
+                var isIncoming = t.ToAccountId == account.Id;
+
+                decimal effect = 0;
+                if (t.TransactionType == "Deposit" && isOutgoing)
+                    effect = t.Amount;
+                else if (t.TransactionType == "Withdrawal" && isOutgoing)
+                    effect = -t.Amount;
+                else if (t.TransactionType == "Transfer")
+                    effect = isOutgoing ? -t.Amount : t.Amount;
+
+                balance += effect;
+
+                history.Add(new BalanceHistoryDto
+                {
+                    Timestamp = t.Timestamp,
+                    TransactionType = t.TransactionType,
+                    Amount = t.Amount,
+                    Description = t.Description,
+                    RunningBalance = balance
+                });
+            }
+
+            return history;
+        }
+
     }
 }

@@ -4,6 +4,7 @@ using Digital_Banking_API.Data;
 using Digital_Banking_API.Services;
 using Digital_Banking_API.Services.Implementations;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle  
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
 

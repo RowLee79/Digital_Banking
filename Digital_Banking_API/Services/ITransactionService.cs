@@ -13,6 +13,7 @@ namespace Digital_Banking_API.Services
         Task<List<Transaction>> GetTransactionHistoryAsync(string accountNumber); // Add this method
         Task<List<Transaction>> GetStatementAsync(string accountNumber, DateTime from, DateTime to);
         Task<List<Transaction>> SearchTransactionsAsync(string accountNumber, decimal? amount, string description);
+        Task<List<BalanceHistoryDto>> GetBalanceHistoryAsync(string accountNumber);
 
     }
 
