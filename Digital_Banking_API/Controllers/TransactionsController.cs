@@ -2,6 +2,10 @@
 using Digital_Banking_API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
+using System.Drawing;
+using System.Text;
 
 namespace Digital_Banking_API.Controllers
 {
@@ -71,5 +75,81 @@ namespace Digital_Banking_API.Controllers
             var history = await _transactionService.GetTransactionHistoryAsync(accountNumber);
             return Ok(history);
         }
+        [HttpGet("/api/accounts/{accountNumber}/statement")]
+        public async Task<IActionResult> GetStatement(string accountNumber, [FromQuery] DateTime from, [FromQuery] DateTime to)
+        {
+            try
+            {
+                var result = await _transactionService.GetStatementAsync(accountNumber, from, to);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("/api/accounts/{accountNumber}/statement/download")]
+        public async Task<IActionResult> DownloadStatement(
+        string accountNumber,
+        [FromQuery] DateTime from,
+        [FromQuery] DateTime to,
+        [FromQuery] string format = "csv") // or "pdf"
+        {
+            try
+            {
+                var transactions = await _transactionService.GetStatementAsync(accountNumber, from, to);
+
+                if (format.ToLower() == "csv")
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine("Date,Type,Amount,Description,Status");
+                    foreach (var t in transactions)
+                    {
+                        csv.AppendLine($"{t.Timestamp:yyyy-MM-dd HH:mm},{t.TransactionType},{t.Amount:F2},{t.Description},{t.Status}");
+                    }
+
+                    var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+                    return File(bytes, "text/csv", $"statement_{accountNumber}.csv");
+                }
+
+                if (format.ToLower() == "pdf")
+                {
+                    using var stream = new MemoryStream();
+                    var doc = new PdfDocument();
+                    var page = doc.AddPage();
+                    var gfx = XGraphics.FromPdfPage(page);
+                    var font = new XFont("Verdana", 10);
+
+                    int y = 40;
+                    gfx.DrawString("Transaction Statement", new XFont("Verdana", 14, XFontStyle.Bold), XBrushes.Black, new XPoint(20, y));
+                    y += 30;
+
+                    foreach (var t in transactions)
+                    {
+                        var line = $"{t.Timestamp:MM/dd/yyyy HH:mm} | {t.TransactionType} | {t.Amount:F2} | {t.Description} | {t.Status}";
+                        gfx.DrawString(line, font, XBrushes.Black, new XPoint(20, y));
+                        y += 20;
+                        if (y > page.Height - 40)
+                        {
+                            page = doc.AddPage();
+                            gfx = XGraphics.FromPdfPage(page);
+                            y = 40;
+                        }
+                    }
+
+                    doc.Save(stream, false);
+                    return File(stream.ToArray(), "application/pdf", $"statement_{accountNumber}.pdf");
+                }
+
+                return BadRequest("Invalid format. Use 'csv' or 'pdf'.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
     }
 }

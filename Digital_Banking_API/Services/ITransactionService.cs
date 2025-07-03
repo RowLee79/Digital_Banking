@@ -10,5 +10,7 @@ namespace Digital_Banking_API.Services
         Task<Transaction> TransferAsync(TransferDto dto);
         Task<Transaction> GetTransactionAsync(int id);
         Task<List<Transaction>> GetTransactionHistoryAsync(string accountNumber);
+        Task<List<Transaction>> GetStatementAsync(string accountNumber, DateTime from, DateTime to);
+
     }
 }

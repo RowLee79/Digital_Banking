@@ -2,6 +2,7 @@
 using Digital_Banking_API.Models;
 using Digital_Banking_API.Models.Dto;
 using Digital_Banking_API.Models.Enums;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Digital_Banking_API.Services.Implementations
@@ -115,6 +116,21 @@ namespace Digital_Banking_API.Services.Implementations
                 .OrderByDescending(t => t.Timestamp)
                 .ToListAsync();
         }
+
+        public async Task<List<Transaction>> GetStatementAsync(string accountNumber, DateTime from, DateTime to)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.AccountNumber == accountNumber);
+            if (account == null) throw new Exception("Account not found.");
+
+            return await _context.Transactions
+                .Where(t =>
+                    (t.FromAccountId == account.Id || t.ToAccountId == account.Id) &&
+                    t.Timestamp >= from && t.Timestamp <= to)
+                .OrderByDescending(t => t.Timestamp)
+                .ToListAsync();
+        }
+
+
     }
 
 }
