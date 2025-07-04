@@ -10,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.  
 
-//builder.Services.AddControllers();
-
 builder.Services.AddControllers()
     .AddJsonOptions(opt =>
     {
@@ -33,9 +31,6 @@ builder.Services.AddSwaggerGen();
 QuestPDF.Settings.License = LicenseType.Community;
 
 var app = builder.Build();
-
-// Seed data
-
 
 // Configure the HTTP request pipeline.  
 if (app.Environment.IsDevelopment())
